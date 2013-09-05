@@ -80,8 +80,6 @@ STATIC_URL = '/static/'
 
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
-GEOIP_DATABASE = PROJECT_ROOT.child('geoip', 'GeoLiteCity.dat')
-
 # Additional locations of static files
 STATICFILES_DIRS = (
     PROJECT_ROOT.child('assets'),
@@ -121,7 +119,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'ecofunds.middleware.forcedresponse.ForceResponseMiddleware',
     'cms.middleware.page.CurrentPageMiddleware',
     'cms.middleware.user.CurrentUserMiddleware',
     'cms.middleware.toolbar.ToolbarMiddleware',
@@ -153,22 +150,19 @@ INSTALLED_APPS = (
     'menus',
     'appmedia',
     'sekizai',
-    'pygeoip',
     'tinymce',
     'babel',
     'xlwt',
-    'ajax_select',
     #'endless_pagination',
     'ecofunds.core',
     'ecofunds.user',
     'ecofunds.maps',
-    'ecofunds.opportunity',
     'ecofunds.project',
     'ecofunds.organization',
     'ecofunds.investment',
 )
 
-CMS_MEDIA_ROOT = PROJECT_ROOT.parent.child('static', 'cms')
+CMS_MEDIA_ROOT = STATIC_ROOT.child('cms')
 CMS_MEDIA_URL = '/static/cms'
 
 CMS_TEMPLATES = (
@@ -177,16 +171,6 @@ CMS_TEMPLATES = (
     ('institutional-template.html', gettext('Institutional Template')),
     ('default-template.html', gettext('Default Template')),
     ('form-template.html', gettext('Form Template'))
-)
-
-CMS_APPLICATIONS_URLS = (
-    #('cmsplugin_news.urls', 'News'),
-    ('ecofunds.opportunity.urls', 'Funding Oportunity'),
-)
-CMS_NAVIGATION_EXTENDERS = (
-    #('cmsplugin_news.navigation.get_nodes','News navigation'),
-    ('ecofunds.opportunity.navigation.get_nodes',
-     'Funding Oportunity Navigation'),
 )
 
 
@@ -215,11 +199,16 @@ LOGGING = {
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
-        'console':{
+        'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
+        'sqlhandler': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'sql'
+        }
     },
     'formatters': {
         'verbose': {
@@ -228,12 +217,20 @@ LOGGING = {
         'simple': {
             'format': '%(levelname)s %(message)s'
         },
+        'sql': {
+            '()': 'ecofunds.sqlformatter.SqlFormatter',
+            'format': '%(levelname)s %(message)s',
+        },
     },
     'loggers': {
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
             'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['sqlhandler'],
+            'level': 'DEBUG',
         },
         'maps': {
             'handlers': ['console'],
